@@ -12,7 +12,11 @@ def main():
 
     meta_files_to_check = ['PKG-INFO', 'METADATA']
 
+    package_data = {}
+
     for installed_distribution in get_installed_distributions():
+        package_name = installed_distribution.project_name
+        package_data[package_name] = {}
         found_license = False
         for metafile in meta_files_to_check:
             if not installed_distribution.has_metadata(metafile):
@@ -20,13 +24,16 @@ def main():
             for line in installed_distribution.get_metadata_lines(metafile):
                 if 'License: ' in line:
                     (k, v) = line.split(': ', 1)
-                    sys.stdout.write("{project_name}: {license}\n".format(
-                        project_name=installed_distribution.project_name,
-                        license=v))
+                    package_data[package_name]['license'] = v
                     found_license = True
+                if 'Version: ' in line:
+                    (k, v) = line.split(': ', 1)
+                    package_data[package_name]['version'] = v
         if not found_license:
-            sys.stdout.write("{project_name}: Found no license information.\n".format(
-                project_name=installed_distribution.project_name))
+            package_data[project_name]['license'] = "Found no license information"
+
+    for package in sorted(package_data.keys()):
+        print('"{}" "{}" "{}"'.format(package, package_data[package]['version'], package_data[package]['license']))
 
 if __name__ == "__main__":
     main()
